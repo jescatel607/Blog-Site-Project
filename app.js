@@ -1,7 +1,7 @@
 require("dotenv").config();
 
-const express = require("express");
 const expressLayouts = require("express-ejs-layouts");
+const express = require("express");
 const app = express();
 const PORT = 4000;
 
@@ -11,13 +11,14 @@ connectDB();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("Hello World");
-});
+// app.get("/", (req, res) => {
+//   res.send("Hello World");
+// });
 
 app.use(expressLayouts);
+app.use("/static", express.static("public"));
 app.set("view engine", "ejs");
-app.set("layouts", "./layourt/main");
+app.set("layout", "./layout/main");
 
 app.use("/", require("./server/routes/main"));
 
