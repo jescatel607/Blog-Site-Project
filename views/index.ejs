@@ -3,19 +3,36 @@
   <p class="author__body">Web Developer and Student</p>
 </div>
 
-<img src="img/apple.jpeg" alt="apple" class="homepage-image" />
+<img src="img/codingtree2.webp" alt="apple" />
 
 <section class="articles">
-  <h2 class="articles__heading">Latest Articles</h2>
+  <h2 class="articles__heading">Latest Posts</h2>
 
   <!-- Dummy data displayed until we include posts later on -->
   <ul class="article_ul">
+    <% data.forEach(post => { %>
     <li>
-      <a href="#">
-        <span>Post title</span>
-        <span class="article-list_date">Date</span>
+      <a href="/post/<%= post._id %>">
+        <span><%- post.title %></span>
+        <span class="article-list_date">
+          <% post.createdAt.toDateString() %>
+        </span>
       </a>
     </li>
+    <%}); %>
   </ul>
+
+  <% if (nextPage !== null) { %>
+  <a href="/?page=<%= nextPage %>" class="pagination">&lt; View Older Posts</a>
+  <% } %>
+
+  <!-- if prevPage is 1 then go to / -->
+  <% if (prevPage >= 1) { %> <% if (prevPage === 1) { %>
+  <a href="/" class="pagination-newer">View Newer Posts &gt;</a>
+  <% } else { %>
+  <a href="/?page=<%= prevPage %>" class="pagination-newer"
+    >View Newer Posts &gt;</a
+  >
+  <% } %> <% } %>
   <a href="#" class="pagination"> &lt; View Older Posts </a>
 </section>
