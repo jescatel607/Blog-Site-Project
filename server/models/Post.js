@@ -1,7 +1,6 @@
-const { create } = require("connect-mongo");
-const mogooese = require("mongoose");
+const mongoose = require("mongoose");
 
-const Schema = mogooese.Schema;
+const Schema = mongoose.Schema;
 const postSchema = new Schema({
   title: {
     type: String,
@@ -21,4 +20,4 @@ const postSchema = new Schema({
   },
 });
 
-module.exports = mogooese.model("Post", postSchema);
+module.exports = mongoose.model("Post", postSchema);
