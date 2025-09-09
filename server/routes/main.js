@@ -3,33 +3,50 @@ const router = express.Router();
 const Post = require("../models/Post");
 
 // Home route
-router.get("/", async (req, res) => {
+router.get("/", async (req, res, next) => {
   const locals = {
     title: "NodeJS Blog",
     description: "A simple blog on NodeJS",
   };
 
-  try {
-    const data = await Post.find().sort({ title: "desc" });
-    res.render("index", { locals, data });
-  } catch (error) {
-    console.log(error);
-  }
+  const perPage = 3;
+  const page = Math.max(parseInt(req.query.page || "1", 10), 1);
+
+  const data = await Post.find({})
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * perPage)
+    .limit(perPage)
+    .lean();
+
+  const count = await Post.countDocuments();
+  const totalPages = Math.max(Math.ceil(count / perPage), 1);
+
+  const nextPage = page < totalPages ? page + 1 : null;
+  const prevPage = page > 1 ? page - 1 : null;
+
+  res.render("index", {
+    locals,
+    data,
+    page,
+    totalPages,
+    nextPage,
+    prevPage,
+  });
 });
 
 // Get Post by Id
-router.get("/post/:id", async (req, res) => {
+router.get("/post/:id", async (req, res, next) => {
   try {
-    let slug = req.params.id;
-    const data = await Post.findById({ _id: slug });
+    const data = await Post.findById(req.params.id).lean();
+    if (!data) return res.status(404).send("Post not found");
 
     const locals = {
       title: data.title,
       description: "A simple blog on NodeJS",
     };
     res.render("post", { locals, data });
-  } catch (error) {
-    console.log(error);
+  } catch (err) {
+    next(err);
   }
 });
 
@@ -40,7 +57,8 @@ router.post("/search", async (req, res) => {
       title: "Search",
       description: "A blog template made with NodeJS and ExpressJS",
     };
-    let searchTerm = req.body.searchTerm;
+
+    const searchTerm = (req.body.searchTerm || "").trim();
     const searchNoSpecialChar = searchTerm.replace(/[^a-zA-Z0-9 ]/g, "");
 
     const data = await Post.find({
@@ -48,46 +66,12 @@ router.post("/search", async (req, res) => {
         { title: { $regex: new RegExp(searchNoSpecialChar, "i") } },
         { body: { $regex: new RegExp(searchNoSpecialChar, "i") } },
       ],
-    });
+    }).lean();
 
     res.render("search", { locals, data });
-  } catch (error) {
-    console.log(error);
+  } catch (err) {
+    next(err);
   }
 });
 
-// I copy and paste this from task 3 get this looked at
-router.get("/", async (req, res) => {
-  try {
-    const locals = {
-      title: "NodeJs Blog",
-      description: "Simple Blog created with NodeJs, Express & MongoDb.",
-    };
-
-    let perPage = 3;
-    let page = req.query.page || 1;
-
-    const data = await Post.aggregate([{ $sort: { title: -1 } }])
-      .skip(perPage * page - perPage)
-      .limit(perPage)
-      .exec();
-
-    // Count is deprecated - please use countDocuments({}) instead
-    // const count = await Post.count();
-    const count = await Post.countDocuments({});
-    const nextPage = parseInt(page) + 1;
-    const hasNextPage = nextPage <= Math.ceil(count / perPage);
-    const hasNextPagePlus = nextPage <= Math.ceil(count * perPage);
-
-    res.render("index", {
-      locals,
-      data,
-      current: page,
-      nextPage: hasNextPage ? nextPage : null,
-      prevPage: hasNextPagePlus ? page - 1 : null,
-    });
-  } catch (error) {
-    console.log(error);
-  }
-});
 module.exports = router;
